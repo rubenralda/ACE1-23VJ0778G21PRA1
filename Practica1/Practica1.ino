@@ -3,15 +3,113 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define DIN 5
-#define CS 6
-#define CLK 7
-#define DEV 1 
-LedControl lc=LedControl(DIN,CLK,CS,DEV);
+#define Num_Matrices 2
+#define Matriz_Size 8
+#define ROW_NUM 8
+#define COL_NUM 16
+
+// BOTONES
+#define RIGHT 6
+#define LEFT 7
+#define START 4
+#define BTN_K 3
+LedControl matrix_driver = LedControl(51, 53, 52, 1);
+
+
+
+
 
 #define HEIGHT 8
 #define LENGTH 16
 
+
+//*************MENSAJE ----- MENU****************
+int contMenu=0;
+
+unsigned long delaytime = 100;
+
+// MATRIZ NODRIVER
+int filas_no_driver[] = {50, 49, 48, 47, 46, 45, 44, 43};
+int columnas_no_driver[] = {42, 41, 40, 39, 38, 37, 36, 35};
+
+// TABLERO DE JUEGO
+int tablero_de_juego[ROW_NUM][COL_NUM] = {}; // tablero para el juego
+
+
+int numeroContador[][8] = {{0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+
+
+
+int valor_potenciometro = 0;
+// INICIALIZACION DEL JUEGO
+bool iniciaJuego = false;
+
+// VARIABLE PARA ESTAR EN MENSAJE
+bool enMensaje =true;
+// VARIABLE PARA ESTAR EN EL MENU
+bool enMenu = false;
+// VARIABLE PARA ESTAR EN LA CONFIGURACION
+bool enConfiguracion = false;
+// VARIABLE PARA ESTAR EN LA ESTADISCTICAS
+bool enStast=false;
+
+//VARIABLE PARA CAMBIO DE DIRECCION
+bool derecha=false;
+
+//VARIABLE PARA ENPAUSA
+bool enPausa=false;
+
+
+//valor numerico de  tiempo presionado en algun boton
+int pressTime = 0;
+//Mensaje
+
+const int cantidad_columnas = 122;
+const int cantidad_columnas2 = 16;
+int posicion_cadena = 0;
+int posicion_cadena2 = 0;
+int posicion_cadena1 = 0;
+int posicion_cadena22 = 0;
+byte cadena[8][cantidad_columnas] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+
+byte cadena2[8][cantidad_columnas2] = {
+  {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0},
+  {0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0},
+  {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0},
+  {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0},
+  {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}
+};
+
+//control de direccion
+
+bool movimiento_inv = false;
+bool temporal_movimiento_inv = false;
+//Controlan el tiempo de recorrido de la cadena
+long prev_MillisM = 0;
+
+//*************MENAJE ------ MENU****************
 typedef enum{
     MOV_LEFT,
     MOV_RIGHT,
@@ -326,9 +424,357 @@ void newgame(){
 
 void setup() {
   // put your setup code here, to run once:
-  
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+
+  // Definicion de los pines de salida para las filas y columnas
+  for (int i = 0; i < 8; i++) {
+    pinMode(filas_no_driver[i], OUTPUT);
+    pinMode(columnas_no_driver[i], OUTPUT);
+  }
+
+  // inicializar matriz con driver
+  matrix_driver.shutdown(0, false);
+  matrix_driver.setIntensity(0, 8);
+  matrix_driver.clearDisplay(0);
+  // inicializar matriz sin driver
+  clearMatrizNoDriver();
+
+  // botones del gamepad
+  pinMode(RIGHT, INPUT);
+  pinMode(LEFT, INPUT);
+  pinMode(START, INPUT);
+  pinMode(BTN_K, INPUT);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  //Implementar acciones segun condiciones
+  if(enMensaje){
+    Serial.println("en mensaje");
+    gamePad();
+    mostrarMensaje();
+
+  }else if (enMenu) {
+    Serial.println("en menu");
+    menu();
+  } else if(enConfiguracion) {
+    Serial.println("en config");
+    //configuracion();
+  } else {
+    Serial.println("en juego");
+    //LimpiarMatrices antes
+    //Juego();
+    gamePad();
+    delay(1);
+  }
+
+   delay(delaytime);
 }
+
+
+
+// TODO: implementar el menu principal el cual
+// despliega el mensaje
+void menu() {  
+
+  //mostrar mensaje
+  //mostrarMensaje();
+  if(contMenu==0){
+    limpiarMatrices();
+   for (int columna = 0; columna < 8; columna++) {
+      for (int fila = 0; fila < 8; fila++) {
+      numeroContador[columna][fila] = numeroContador[columna][fila];
+      }
+    }
+    pintar();
+    pintar();
+    pintar();
+    delay(10);
+    contMenu=1;
+  }else{
+    mostrarMensaje2();
+    //delay(1);
+  }
+
+
+  if(gamePad()=='l'){
+    Serial.println("Juego");
+    enMenu=false;
+    iniciaJuego=true;
+    
+  }else if(gamePad()=='r'){
+    Serial.println("enConfig");
+    //enMenu=false;
+    //enConfiguracion=true;
+
+  }else if(gamePad()=='s'){
+    Serial.println("stats");
+    //enMenu=false;
+    //enStast=true;
+  }
+  
+    
+  
+  
+  
+}
+
+
+
+
+
+//Muestra la cantidad de vidas en el menu de pausa
+
+
+
+char gamePad() {
+  if (digitalRead(RIGHT) == HIGH) {
+    return 'r';
+
+  } else if (digitalRead(LEFT) == HIGH) {
+    return 'l';
+
+  } else if (digitalRead(START) == HIGH) {
+    if(enMensaje==true && enMenu==false && iniciaJuego==false){
+      Serial.println("Cambio de direccion");
+      if(temporal_movimiento_inv==false){
+        Serial.print("izquierda");
+        temporal_movimiento_inv = true;
+        movimiento_inv = temporal_movimiento_inv;
+        //derecha=true;
+      }else if(temporal_movimiento_inv== true){
+        Serial.print("derecha");
+        temporal_movimiento_inv = false;
+        movimiento_inv = temporal_movimiento_inv;
+        //derecha =false;
+      }
+    }
+    
+    return 's';
+  }else if(digitalRead(BTN_K)==HIGH){
+      pressTime++;
+      delay(500); // works like a timer with one second steps
+      if (pressTime >= 3)
+      {
+        if(enMensaje == true && enMenu==false && iniciaJuego==false){
+          
+          Serial.println("3seg");
+          enMensaje=false;
+          enMenu=true;
+          iniciaJuego=false;
+          pressTime=0;
+        
+        }if(enMensaje == false && enMenu==false && iniciaJuego==true){
+          
+          Serial.println("3seg");
+          enMensaje=false;
+          enMenu=true;
+          iniciaJuego=false;
+          pressTime=0;
+        
+        }
+
+
+      }else if(pressTime <= 2){
+        //imprimir vidas
+        if(enMensaje == false && enMenu==false && iniciaJuego==true){
+          
+          Serial.println("LAS VIDAS SON :");
+          
+          
+        }
+        
+
+      }
+      
+    
+    return 'k';
+  }
+  return ' ';
+}
+
+
+
+void limpiarTableroDeJuego() {
+  // limpiaremos el tablero de juego
+  for (int i = 0; i < ROW_NUM; i ++) {
+    for (int j = 0; j < COL_NUM; j++) {
+      tablero_de_juego[i][j] = 0;
+    }
+  }
+}
+
+
+
+
+
+void actualizarMatrices(int matriz_izquierda[ROW_NUM][COL_NUM/2], int matriz_derecha[ROW_NUM][COL_NUM/2]) {
+  //Lo primero que hay que hacer es un barrido por columnas
+  for (int i = 0; i < COL_NUM/2; i++) {
+    digitalWrite(columnas_no_driver[i], HIGH);
+    // despues de prender la columna actual debemos
+    // pintar las filas que se encuentran prendidas
+    for (int j = 0; j < ROW_NUM; j++) {
+      // despues comprobar si hay que pintar una posicion
+      // en la matriz sin driver
+      if (matriz_derecha[j][i] == 1) {
+        digitalWrite(filas_no_driver[j], LOW);
+      } else {
+        digitalWrite(filas_no_driver[j], HIGH);
+      }
+      //actualizando la matriz con driver
+      matrix_driver.setLed(0, i, j, matriz_izquierda[i][j]);
+    }
+    delay(1);
+    //limpiando para la matriz sin driver
+    digitalWrite(columnas_no_driver[i], LOW);
+    for (int j = 0; j < ROW_NUM; j++) {
+      digitalWrite(filas_no_driver[j], HIGH);
+    }
+  }
+}
+
+void draw() {
+   // matriz con driver
+   int matriz_izquierda[ROW_NUM][COL_NUM/2] = {};
+   // matriz sin driver
+   int matriz_derecha[ROW_NUM][COL_NUM/2] = {};
+  
+  // este loop hace que se pueda escribir dentro de la matriz de led
+  for (int i = 0; i < ROW_NUM; i++) {
+    for (int j = 0; j < COL_NUM; j++) {
+      //si la columna es menor que 8, esta pintara en la matriz con driver (izquierda)
+      //de lo contrario pintara en la matriz sin driver (derecha)
+      if (j < COL_NUM/2) {
+        matriz_izquierda[i][j] = tablero_de_juego[i][j];
+      } else {
+        matriz_derecha[i][j-8] = tablero_de_juego[i][j];
+      }
+    }
+  }
+  // actualizacion de las matrices
+  actualizarMatrices(matriz_izquierda, matriz_derecha);
+}
+
+void limpiarMatrices() {
+  // limpiaremos los displays de las matrices.
+  matrix_driver.clearDisplay(0);
+  for (int i = 0; i < (COL_NUM / 2); i++) {
+    digitalWrite(columnas_no_driver[i], HIGH);
+    for (int j = 0; j < ROW_NUM; j++) {
+      digitalWrite(filas_no_driver[j], LOW);
+    }
+  }
+}
+
+
+void pintar() {
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(filas_no_driver[i], LOW);
+    for (int j = 0; j < 8; j++) {
+      if (numeroContador[i][j] == 1) {
+        digitalWrite(columnas_no_driver[j], HIGH);
+      }
+    }
+    delay(1);
+    digitalWrite(filas_no_driver[i], HIGH);
+    for (int j = 0; j < 8; j++) {
+      digitalWrite(columnas_no_driver[j], LOW);
+    }
+  }
+}
+
+
+
+
+void mostrarMensaje() {
+  delaytime = valor_potenciometro;
+  unsigned long currentMillis = millis();
+ 
+  for (int i = 0; i < 8; i++) {
+
+    for (int j = 0; j < 16; j++) {
+
+      
+
+
+      if(cadena[i][j + posicion_cadena2]==0 ){
+        
+        tablero_de_juego[i][j]=0;
+        
+      }else{
+        
+        tablero_de_juego[i][j]=1;
+      }
+      
+    }
+  
+    delay(5);
+  }
+
+  if (currentMillis - prev_MillisM > delaytime) {
+    prev_MillisM = currentMillis;
+    //cadena de derecha a izquierda = true
+    if (movimiento_inv == true) {
+      
+
+      posicion_cadena2 = (posicion_cadena2 == (cantidad_columnas - 1 )) ? 0 : posicion_cadena2 + 1;
+      posicion_cadena = (posicion_cadena == 0) ? cantidad_columnas - 2 : posicion_cadena - 1;
+
+    } else {
+      posicion_cadena2 = (posicion_cadena2 == 0) ? cantidad_columnas - 2 : posicion_cadena2 - 1;
+      posicion_cadena = (posicion_cadena == (cantidad_columnas - 1)) ? 0 : posicion_cadena + 1;
+    }
+   
+  }
+
+  
+ draw();
+limpiarTableroDeJuego();
+}
+
+
+void mostrarMensaje2() {
+ 
+  delaytime = valor_potenciometro;
+  unsigned long currentMillis = millis();
+ 
+  for (int i = 0; i < 8; i++) {
+   
+    for (int j = 0; j < 16; j++) {
+
+     
+
+
+      if(cadena2[i][j ]==0 ){
+     
+        tablero_de_juego[i][j]=0;
+        
+      }else{
+       
+        tablero_de_juego[i][j]=1;
+      }
+      
+    }
+
+    delay(1);
+  }
+
+  
+
+  
+
+ draw();
+limpiarTableroDeJuego();
+}
+
+
+void clearMatrizNoDriver() {
+  for (int i = 0; i < COL_NUM/2; i++) {
+    digitalWrite(columnas_no_driver[i], LOW);
+    for (int j = 0; j < ROW_NUM; j++) {
+     digitalWrite(filas_no_driver[j], HIGH);
+    }
+  }
+}
+
