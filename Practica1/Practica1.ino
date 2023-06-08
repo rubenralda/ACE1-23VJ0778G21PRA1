@@ -15,14 +15,6 @@
 #define BTN_K 3
 LedControl matrix_driver = LedControl(51, 53, 52, 1);
 
-
-
-
-
-#define HEIGHT 8
-#define LENGTH 16
-
-
 //*************MENSAJE ----- MENU****************
 int contMenu=0;
 
@@ -110,12 +102,12 @@ bool temporal_movimiento_inv = false;
 long prev_MillisM = 0;
 
 //*************MENAJE ------ MENU****************
+
 typedef enum{
     MOV_LEFT,
     MOV_RIGHT,
 }movement; // dirección del desplazamiento, hacia la izquierda o derecha
 
-int canvas[HEIGHT][LENGTH] = { 0 }; //lienzo x*y
 uint8_t global_lives = 3; // Por defecto el juego comienza con 3 vidas
 long int global_delay = 1000; // delay global
 
@@ -133,13 +125,12 @@ typedef struct{
 }plane;
 plane current_plane;
 
-uint8_t towers[LENGTH] = { 0 }; // Torres del juego, el indice es x, el valor es la altura de la torre
+uint8_t towers[COL_NUM] = { 0 }; // Torres del juego, el indice es x, el valor es la altura de la torre
 uint8_t bombX,bombY;            // posición de una bomba siendo lanzada
 bool    is_tower = false;       // marca si la posisión en la que se lanzó un proyectil tiene un torre
 
+/*** Métodos de juego  ***/
 uint8_t x_pos(movement,uint8_t,uint8_t,uint8_t);
-void clean_canvas();
-void render_canvas();
 void gameloop();
 void newgame();
 void next_level();
@@ -154,28 +145,6 @@ void launch_bomb();
 void bombloop();
 void check_score();
 
-/*
- *  Hace que el lienzo vuelta a estar conformado por sólo 0's
- */
-void clean_canvas(){
-    for(int y = 0; y < HEIGHT ; y++){
-        for(int x = 0 ; x < LENGTH; x++){
-            canvas[y][x]=0;
-        }
-    }
-}
-
-void render_canvas(){
-    for(int y = 0; y < HEIGHT ; y++){
-        for(int x = 0 ; x < LENGTH; x++){
-            if(x>7){
-                //matriz sin driver
-            }else{
-                //matriz con driver
-            }
-        }
-    }
-}
 
 /*
  * Ejecuta el lanzamiento de una bomba
@@ -196,7 +165,7 @@ void launch_bomb(){
  */
 void bombloop(){
     if (current_plane.bomb){
-        canvas[bombY][bombX] = 0 ;
+        tablero_de_juego[bombY][bombX] = 0 ;
         if(towers[bombX]!=0 && towers[bombX] == 7 - bombY ){
             towers[bombX]=towers[bombX]-1;
         }
@@ -213,7 +182,7 @@ void bombloop(){
             is_tower = false;
             check_score();
         }else{
-            canvas[bombY][bombX] = 1 ;
+            tablero_de_juego[bombY][bombX] = 1 ;
         }
     }
 }
@@ -221,7 +190,7 @@ void bombloop(){
 /*
  *  Determina las coordenadas que le tocan a una parte del avión
  */
-uint8_t x_pos(movement direction,uint8_t current,uint8_t step = 1,uint8_t max = LENGTH - 1){
+uint8_t x_pos(movement direction,uint8_t current,uint8_t step = 1,uint8_t max = COL_NUM - 1){
     if(direction == MOV_LEFT){
         uint8_t new_pos = current + step;
         return (new_pos > max) ? new_pos - max -1 : new_pos; 
@@ -238,10 +207,10 @@ void move_plane(){
     current_plane.front = x_pos(current_plane.direction,current_plane.front);
     current_plane.middle = x_pos(current_plane.direction,current_plane.middle);
     current_plane.rear = x_pos(current_plane.direction,current_plane.rear);
-    canvas[current_plane.bottom][current_plane.front] = 1;
-    canvas[current_plane.bottom][current_plane.middle] = 1;
-    canvas[current_plane.bottom][current_plane.rear] = 1;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
     check_collision();
 }
 
@@ -251,10 +220,10 @@ void move_plane(){
 void move_plane_down(){
     remove_plane();
     current_plane.bottom = (current_plane.bottom + 1 < 7 ) ? current_plane.bottom + 1 : 7;
-    canvas[current_plane.bottom][current_plane.front] = 1;
-    canvas[current_plane.bottom][current_plane.middle] = 1;
-    canvas[current_plane.bottom][current_plane.rear] = 1;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
     check_collision();
 }
 
@@ -267,20 +236,20 @@ void reset_plane(){
     current_plane.middle = 1,
     current_plane.rear = 0,
     current_plane.bottom = 1,
-    canvas[current_plane.bottom][current_plane.front] = 1;
-    canvas[current_plane.bottom][current_plane.middle] = 1;
-    canvas[current_plane.bottom][current_plane.rear] = 1;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 1 ;
 }
 
 /*
  * Remueve del lienzo unicamente el avión, para cuando se tiene que mover
  */
 void remove_plane(){
-    canvas[current_plane.bottom][current_plane.front] = 0;
-    canvas[current_plane.bottom][current_plane.middle] = 0;
-    canvas[current_plane.bottom][current_plane.rear] = 0;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 0 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 0;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 0;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 0;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT)? current_plane.rear : current_plane.front] = 0 ;
 }
 
 /*
@@ -302,7 +271,8 @@ void check_collision(){
                 current_plane.lives--;
                 reset_plane();
                 add_towers();
-                render_canvas();
+                //render_tablero_de_juego();
+                draw();
         }
     }
 }
@@ -323,13 +293,13 @@ void generate_towers(uint8_t nivel){
     uint8_t counter =0;
     while(counter<nivel){
         uint8_t randomY = (rand() % 4 ) + 1 ;
-        uint8_t randomX = rand() % LENGTH;
+        uint8_t randomX = rand() % COL_NUM;
         if(towers[randomX]== 0 ){
             towers[randomX] = randomY;
             counter++;
         }
     }
-    clean_canvas();
+    limpiarTableroDeJuego();
     add_towers();
 }
 
@@ -337,9 +307,9 @@ void generate_towers(uint8_t nivel){
  *  Pone las torres en el lienzo
  */
 void add_towers(){
-    for(int i = 0 ; i<LENGTH ; i++){
+    for(int i = 0 ; i<COL_NUM ; i++){
         for(int y=0; y < towers[i] ;y++ ){
-            canvas[7-(y)][i] = 1;
+            tablero_de_juego[7-(y)][i] = 1;
         }
     }
 }
@@ -348,7 +318,7 @@ void add_towers(){
  * Reinicia el arreglo de torres
  */
 void reset_towers(){
-    for(int i = 0 ; i<LENGTH ; i++){
+    for(int i = 0 ; i<COL_NUM ; i++){
         towers[i] = 0;
     }
 }
@@ -363,9 +333,11 @@ void gameloop(){
         launch_bomb();
     }
     */
-    render_canvas();
+    //render_tablero_de_juego();
+    draw();
     bombloop();
-    render_canvas();
+    //render_tablero_de_juego();
+    draw();
 }
 
 /* TODO: Animación de cambio de nivel
@@ -373,7 +345,7 @@ void gameloop(){
  */
 void next_level(){
 
-    clean_canvas();
+    limpiarTableroDeJuego();
     reset_towers();
 
     current_plane.direction = MOV_LEFT;
@@ -386,10 +358,10 @@ void next_level(){
     current_plane.bomb = false;
     current_plane.level = (current_plane.level + 1 > 16) ? 16 : current_plane.level+1;
 
-    canvas[current_plane.bottom][current_plane.front] = 1;
-    canvas[current_plane.bottom][current_plane.middle] = 1;
-    canvas[current_plane.bottom][current_plane.rear] = 1;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT) ? current_plane.rear : current_plane.front] = 1 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT) ? current_plane.rear : current_plane.front] = 1 ;
 
     generate_towers(current_plane.level);
     add_towers();
@@ -400,7 +372,7 @@ void next_level(){
  * Inicia el juego con valores predeterminados
  */
 void newgame(){
-    clean_canvas();
+    limpiarTableroDeJuego();
     reset_towers();
     current_plane.lives = global_lives;
     current_plane.direction = MOV_LEFT;
@@ -413,10 +385,10 @@ void newgame(){
     current_plane.bomb = false;
     current_plane.level = 1;
 
-    canvas[current_plane.bottom][current_plane.front] = 1;
-    canvas[current_plane.bottom][current_plane.middle] = 1;
-    canvas[current_plane.bottom][current_plane.rear] = 1;
-    canvas[current_plane.bottom-1][(current_plane.direction == MOV_LEFT) ? current_plane.rear : current_plane.front] = 1 ;
+    tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
+    tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
+    tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT) ? current_plane.rear : current_plane.front] = 1 ;
     generate_towers(1);
     add_towers();
     gameloop();
@@ -512,21 +484,10 @@ void menu() {
     //enMenu=false;
     //enStast=true;
   }
-  
-    
-  
-  
-  
+
 }
 
-
-
-
-
-//Muestra la cantidad de vidas en el menu de pausa
-
-
-
+//Muestra la cantidad de vidas en el 
 char gamePad() {
   if (digitalRead(RIGHT) == HIGH) {
     return 'r';
@@ -584,15 +545,12 @@ char gamePad() {
           
         }
         
-
       }
-      
-    
+       
     return 'k';
   }
   return ' ';
 }
-
 
 
 void limpiarTableroDeJuego() {
@@ -603,10 +561,6 @@ void limpiarTableroDeJuego() {
     }
   }
 }
-
-
-
-
 
 void actualizarMatrices(int matriz_izquierda[ROW_NUM][COL_NUM/2], int matriz_derecha[ROW_NUM][COL_NUM/2]) {
   //Lo primero que hay que hacer es un barrido por columnas
@@ -695,9 +649,6 @@ void mostrarMensaje() {
 
     for (int j = 0; j < 16; j++) {
 
-      
-
-
       if(cadena[i][j + posicion_cadena2]==0 ){
         
         tablero_de_juego[i][j]=0;
@@ -717,7 +668,6 @@ void mostrarMensaje() {
     //cadena de derecha a izquierda = true
     if (movimiento_inv == true) {
       
-
       posicion_cadena2 = (posicion_cadena2 == (cantidad_columnas - 1 )) ? 0 : posicion_cadena2 + 1;
       posicion_cadena = (posicion_cadena == 0) ? cantidad_columnas - 2 : posicion_cadena - 1;
 
@@ -730,7 +680,7 @@ void mostrarMensaje() {
 
   
  draw();
-limpiarTableroDeJuego();
+ limpiarTableroDeJuego();
 }
 
 
