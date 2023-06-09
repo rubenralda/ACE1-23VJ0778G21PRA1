@@ -571,9 +571,9 @@ void menu() {
     iniciaJuego=true;
     
   }else if(gamePad()=='s'){
-    Serial.println("stats");    
-    // tablero_de_juego = bufferStats;    
+    Serial.println("stats");
     mostrarStats();
+    delay(150);
 
   }else if(gamePad()=='r'){
     Serial.println("enConfig");
@@ -596,19 +596,17 @@ char gamePad() {
       
       Serial.println("Cambio de direccion");
       if(temporal_movimiento_inv==false){
-        delay(5);
         Serial.println("izquierda");
         temporal_movimiento_inv = true;
         movimiento_inv = temporal_movimiento_inv;
         //derecha=true;
       }else if(temporal_movimiento_inv== true){
-        delay(5);
-        Serial.println("derecha");
-        
+        Serial.println("derecha");        
         temporal_movimiento_inv = false;
         movimiento_inv = temporal_movimiento_inv;
         //derecha =false;
       }
+      delay(50);
     }
     
     return 's';
@@ -827,7 +825,9 @@ limpiarTableroDeJuego();
 }
 
 void mostrarStats() { 
-
+  long int t0 = 0;
+  long int t1 = 0;
+  bool presionado_actualmente = false;
   while(1){
     unsigned long currentMillis = millis(); 
     for (int i = 0; i < 8; i++) {   
@@ -844,8 +844,24 @@ void mostrarStats() {
   limpiarTableroDeJuego();
 
   // Contador Botón 3 segundos para salir 
-  
-
+  t1 = millis();
+    if(digitalRead(BTN_K)==HIGH) { // BOTON K
+        if (!presionado_actualmente) {
+            presionado_actualmente = true;
+            t0 = millis();
+        } else {
+            long int diferencia = t1 - t0;            
+            if (diferencia >= 2800 && diferencia <= 3300) {   // APROX 3 SEG              
+                if (!digitalRead(2)) { 
+                    limpiarTableroDeJuego();
+                    delay(100);
+                    break;
+                }
+            }
+        }
+    } else {
+        presionado_actualmente = false;
+    }
   }
 }
 
