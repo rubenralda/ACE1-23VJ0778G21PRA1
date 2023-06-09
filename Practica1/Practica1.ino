@@ -563,14 +563,18 @@ char gamePad() {
 
   } else if (digitalRead(START) == HIGH) {
     if(enMensaje==true && enMenu==false && iniciaJuego==false){
+      
       Serial.println("Cambio de direccion");
       if(temporal_movimiento_inv==false){
-        Serial.print("izquierda");
+        delay(5);
+        Serial.println("izquierda");
         temporal_movimiento_inv = true;
         movimiento_inv = temporal_movimiento_inv;
         //derecha=true;
       }else if(temporal_movimiento_inv== true){
-        Serial.print("derecha");
+        delay(5);
+        Serial.println("derecha");
+        
         temporal_movimiento_inv = false;
         movimiento_inv = temporal_movimiento_inv;
         //derecha =false;
