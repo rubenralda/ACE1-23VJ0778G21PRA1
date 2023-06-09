@@ -18,9 +18,9 @@ LedControl matrix_driver = LedControl(51, 53, 52, 1);
 
 // ------------------------------------------------------
 // -------------------- ESTADÍSTICAS --------------------
-int punteos[] = {0,0,0,0,0}; // Stack de Punteos
+int punteos[] = {2,1,0,0,0}; // Stack de Punteos
 int stats[] = {0,0,0,0,0}; // Stack de Stats (0-8)
-byte bufferStats[8][16];
+int bufferStats[8][16];
 
 
 void limpiarBufferStats(){
@@ -569,14 +569,14 @@ void menu() {
     iniciaJuego=true;
     
   }else if(gamePad()=='r'){
+    Serial.println("stats");    
+    // tablero_de_juego = bufferStats;    
+    mostrarStats();
+
+  }else if(gamePad()=='s'){
     Serial.println("enConfig");
     //enMenu=false;
     //enConfiguracion=true;
-
-  }else if(gamePad()=='s'){
-    Serial.println("stats");
-    //enMenu=false;
-    //enStast=true;
   }
 
 }
@@ -814,6 +814,30 @@ void mostrarMensaje2() {
 
  draw();
 limpiarTableroDeJuego();
+}
+
+void mostrarStats() { 
+
+  while(1){
+    delaytime = valor_potenciometro;
+    unsigned long currentMillis = millis(); 
+    for (int i = 0; i < 8; i++) {   
+      for (int j = 0; j < 16; j++) {  
+        if(bufferStats[i][j]==0 ){     
+          tablero_de_juego[i][j]=0;       
+        }else{       
+          tablero_de_juego[i][j]=1;
+        }      
+      }
+      delay(1);
+    } 
+  draw();
+  limpiarTableroDeJuego();
+
+  // Contador Botón 3 segundos para salir 
+  
+
+  }
 }
 
 
