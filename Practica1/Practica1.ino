@@ -78,7 +78,7 @@ void actualizarBufferStats(){
 //*************MENSAJE ----- MENU****************
 int contMenu=0;
 
-unsigned long delaytime = 100;
+unsigned long delaytime = 40;
 
 // MATRIZ NODRIVER
 int filas_no_driver[] = {50, 49, 48, 47, 46, 45, 44, 43};
@@ -301,6 +301,7 @@ void gamepad_action(char button){
         enMensaje=false;
         enMenu=false;
         iniciaJuego=false;
+        enConfiguracion=false;
         // menú pausa
     }else if(button == 's'){
         launch_bomb();
@@ -349,6 +350,7 @@ void check_collision(){
                 enMensaje=true;
                 enMenu=false;
                 iniciaJuego=false;
+                enConfiguracion=false;
             }
                 current_plane.lives--;
                 reset_plane();
@@ -519,7 +521,7 @@ void loop() {
     menu();
   } else if(enConfiguracion) {
     Serial.println("en config");
-    //configuracion();
+    configuracion();
   } else {
     Serial.println("en juego");
     //LimpiarMatrices antes
@@ -568,15 +570,15 @@ void menu() {
     enMenu=false;
     iniciaJuego=true;
     
-  }else if(gamePad()=='r'){
+  }else if(gamePad()=='s'){
     Serial.println("stats");    
     // tablero_de_juego = bufferStats;    
     mostrarStats();
 
-  }else if(gamePad()=='s'){
+  }else if(gamePad()=='r'){
     Serial.println("enConfig");
-    //enMenu=false;
-    //enConfiguracion=true;
+    enMenu=false;
+    enConfiguracion=true;
   }
 
 }
@@ -590,7 +592,7 @@ char gamePad() {
     return 'l';
 
   } else if (digitalRead(START) == HIGH) {
-    if(enMensaje==true && enMenu==false && iniciaJuego==false){
+    if(enMensaje==true && enMenu==false && iniciaJuego==false && enConfiguracion == false){
       
       Serial.println("Cambio de direccion");
       if(temporal_movimiento_inv==false){
@@ -615,28 +617,39 @@ char gamePad() {
       delay(500); // works like a timer with one second steps
       if (pressTime >= 3)
       {
-        if(enMensaje == true && enMenu==false && iniciaJuego==false){
+        if(enMensaje == true && enMenu==false && iniciaJuego==false && enConfiguracion == false){
           
           Serial.println("3seg");
           enMensaje=false;
           enMenu=true;
           iniciaJuego=false;
+          enConfiguracion = false;
           pressTime=0;
         
-        }if(enMensaje == false && enMenu==false && iniciaJuego==true){
+        }if(enMensaje == false && enMenu==false && iniciaJuego==true && enConfiguracion == false){
           
           Serial.println("3seg");
           enMensaje=false;
           enMenu=true;
           iniciaJuego=false;
+          enConfiguracion = false;
+          pressTime=0;
+        
+        }
+        if(enMensaje == false && enMenu==false && iniciaJuego==false && enConfiguracion == true){
+          
+          Serial.println("3seg config");
+          enMensaje=false;
+          enMenu=true;
+          iniciaJuego=false;
+          enConfiguracion = false;
           pressTime=0;
         
         }
 
-
       }else if(pressTime <= 2){
         //imprimir vidas
-        if(enMensaje == false && enMenu==false && iniciaJuego==true){
+        if(enMensaje == false && enMenu==false && iniciaJuego==true && enConfiguracion == false){
           
           Serial.println("LAS VIDAS SON :");
           
@@ -740,7 +753,6 @@ void pintar() {
 
 
 void mostrarMensaje() {
-  delaytime = valor_potenciometro;
   unsigned long currentMillis = millis();
  
   for (int i = 0; i < 8; i++) {
@@ -758,7 +770,7 @@ void mostrarMensaje() {
       
     }
   
-    delay(5);
+    delay(delaytime/100);
   }
 
   if (currentMillis - prev_MillisM > delaytime) {
@@ -783,8 +795,6 @@ void mostrarMensaje() {
 
 
 void mostrarMensaje2() {
- 
-  delaytime = valor_potenciometro;
   unsigned long currentMillis = millis();
  
   for (int i = 0; i < 8; i++) {
@@ -805,7 +815,7 @@ void mostrarMensaje2() {
       
     }
 
-    delay(1);
+    delay(delaytime/100);
   }
 
   
@@ -819,7 +829,6 @@ limpiarTableroDeJuego();
 void mostrarStats() { 
 
   while(1){
-    delaytime = valor_potenciometro;
     unsigned long currentMillis = millis(); 
     for (int i = 0; i < 8; i++) {   
       for (int j = 0; j < 16; j++) {  
@@ -850,3 +859,28 @@ void clearMatrizNoDriver() {
   }
 }
 
+//configuracion del juego y el mensaje
+void configuracion() {
+  delay(1);
+  gamePad();
+  unsigned long currentMillis = millis();
+  int potenciometro_velocidad = map(analogRead(A0), 0, 1000, 40, 0);
+  int mostrar_velocidad = 10 - (potenciometro_velocidad*10)/40; //porcentaje de la velocidad por regla de 3
+  delaytime = potenciometro_velocidad;
+  int potenciometro_vidas = map(analogRead(A8), 0, 1000, 3, 10);
+  global_lives = potenciometro_vidas;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 16; j++) {
+        tablero_de_juego[i][j] = 0;
+        if(i >= 1 && i < 3 && j < mostrar_velocidad){
+          tablero_de_juego[i][j] = 1;
+        }
+        if(i >= 5 && i < 7 && j < potenciometro_vidas){
+          tablero_de_juego[i][j] = 1;
+        }      
+    }
+  }
+  Serial.println(mostrar_velocidad);
+  Serial.println(delaytime);
+  draw();
+}
