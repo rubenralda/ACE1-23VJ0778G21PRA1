@@ -204,6 +204,7 @@ void remove_plane();
 void launch_bomb();
 void bombloop();
 void check_score();
+void gamepad_action(char);
 
 
 /*
@@ -288,6 +289,24 @@ void move_plane_down(){
 }
 
 /*
+ * Realiza acciones de acuerdo al input dado por el gamepad 
+ */
+void gamepad_action(char button){
+    if(button == 'l'){
+        current_plane.direction = MOV_LEFT;
+    }else if(button == 'r'){
+        current_plane.direction = MOV_RIGHT;
+    }else if(button == 'k'){
+        enPausa = true;
+        enMensaje=false;
+        enMenu=false;
+        iniciaJuego=false;
+        // menú pausa
+    }else if(button == 's'){
+        launch_bomb();
+    }
+}
+/*
  *  Remueve el avión del lienzo, y lo regresa a su posisión por defecto
  */
 void reset_plane(){
@@ -325,8 +344,11 @@ void check_collision(){
             8-towers[current_plane.front]<=current_plane.bottom)
         {
             if(current_plane.lives == 0){
-                // implementar GAMEOVER
-                newgame();
+                //GAMEOVER;
+                enPausa = false;
+                enMensaje=true;
+                enMenu=false;
+                iniciaJuego=false;
             }
                 current_plane.lives--;
                 reset_plane();
@@ -501,8 +523,14 @@ void loop() {
   } else {
     Serial.println("en juego");
     //LimpiarMatrices antes
+    limpiarMatrices();
+    if(iniciaJuego){
+        newgame();
+        iniciaJuego = false;
+    }
+    gameloop();
     //Juego();
-    gamePad();
+    gamepad_action(gamePad());
     delay(1);
   }
 
