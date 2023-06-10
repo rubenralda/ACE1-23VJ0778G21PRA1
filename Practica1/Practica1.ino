@@ -307,12 +307,54 @@ void gamepad_action(char button){
     }else if(button == 'r'){
         current_plane.direction = MOV_RIGHT;
     }else if(button == 'k'){
-        enPausa = true;
-        enJuego = false;
-        enMensaje=false;
-        enMenu=false;
-        iniciaJuego=false;
-        enConfiguracion=false;
+        if(enPausa){
+            pressTime = 0;
+            bool toMenu = false;
+            bool toGame = false;
+            while(digitalRead(BTN_K)==HIGH){ 
+                pressTime++;
+                delay(100);
+                mostrarNumero(current_plane.lives,1,true);
+                if(pressTime > 29){
+                    Serial.print(pressTime);
+                    Serial.println(" REGRESAR AL MENU");
+                    toMenu = true;
+                }else if (pressTime < 30 && pressTime > 19){
+                    Serial.print(pressTime);
+                    Serial.println("REGRESAR AL JUEGO");
+                    toGame = true;
+                }else{
+                    Serial.print(pressTime);
+                    Serial.println("QUEDARSE EN PAUSA"); 
+                }
+            }
+            if(toMenu){
+                // Si k se presiona durante 3 segundos mientras el juego está pausado, se regresa al menú principal
+                enPausa = false;
+                enJuego = false;
+                enMensaje=false;
+                enMenu=true;
+                iniciaJuego=false;
+                enConfiguracion=false;
+                pressTime = 0;
+            }else if(toGame){
+                enPausa = false;
+                enJuego = true;
+                enMensaje=false;
+                enMenu=false;
+                iniciaJuego=false;
+                enConfiguracion=false;
+                pressTime = 0;
+
+            }
+        }else{
+            enPausa = true;
+            enJuego = false;
+            enMensaje=false;
+            enMenu=false;
+            iniciaJuego=false;
+            enConfiguracion=false;
+        }
         // menú pausa
     }else if(button == 's'){
         launch_bomb();
@@ -537,7 +579,7 @@ void loop() {
   } else if(enPausa){
     Serial.println("en pausa");
     mostrarNumero(current_plane.lives,1,true);
-    gamePad();
+    gamepad_action(gamePad());
     return;
   } else if(iniciaJuego){
     Serial.println("nuevo juego");
@@ -626,6 +668,9 @@ char gamePad() {
     }  
     return 's';
   }else if(digitalRead(BTN_K)==HIGH){
+      if(enPausa){
+        return 'k';
+      }
       pressTime++;
       delay(50); // works like a timer with one second steps
       Serial.println(pressTime);
@@ -660,6 +705,7 @@ char gamePad() {
           pressTime=0;
         
         }
+        /*
         if(enPausa){
             Serial.println("3seg REGRESAR AL MENÚ");
             // Si k se presiona durante 3 segundos mientras el juego está pausado, se regresa al menú principal
@@ -671,7 +717,7 @@ char gamePad() {
             enConfiguracion=false;
             pressTime = 0;
 
-        }
+        }*/
       }/*  else if( enPausa && pressTime > 19 && pressTime < 30) {
             // Si k se presiona por 2 segundos, mientras se está en pausa, el juego se reanuda
              
@@ -1023,7 +1069,7 @@ int digitos[10][8][8] = {
   
 };
 
-void mostrarNumero(int num, int seconds, bool mostrar_tick = false){
+void mostrarNumero(int num, int seconds, bool mostrar_tick){
   int unidades = num % 10;
   int decenas = (num - unidades) / 10;
 
