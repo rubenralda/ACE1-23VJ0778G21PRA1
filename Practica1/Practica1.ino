@@ -191,6 +191,7 @@ typedef struct{
     uint8_t     rear;       // parte trasera
     uint8_t     bottom;     // altura de abajo
     bool        bomb;       // determina si el avión está lanzando un proyectil
+    unsigned long   plane_time; // reloj del avión
 }plane;
 plane current_plane;
 
@@ -466,6 +467,10 @@ void reset_towers(){
  */
 void gameloop(){
     move_plane();
+    if(millis() - current_plane.plane_time > 1000 ){
+        current_plane.plane_time = millis();
+        move_plane_down();
+    }
     /*
     if(towers[current_plane.middle]!=0){//modo automatico xd
         launch_bomb();
@@ -522,6 +527,7 @@ void newgame(){
     current_plane.score = 0;
     current_plane.bomb = false;
     current_plane.level = 1;
+    current_plane.plane_time = millis();
 
     tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
