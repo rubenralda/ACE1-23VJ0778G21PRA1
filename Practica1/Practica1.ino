@@ -366,10 +366,10 @@ void gamepad_action(char button){
  */
 void reset_plane(){
     remove_plane();
-    current_plane.front = 2,
-    current_plane.middle = 1,
-    current_plane.rear = 0,
-    current_plane.bottom = 1,
+    //current_plane.front = 2,
+    //current_plane.middle = 1,
+    //current_plane.rear = 0,
+    current_plane.bottom -=2 ,
     tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
