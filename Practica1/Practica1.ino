@@ -78,7 +78,8 @@ void actualizarBufferStats(){
 //*************MENSAJE ----- MENU****************
 int contMenu=0;
 
-unsigned long delaytime = 40;
+unsigned long delaytime = 1; 
+unsigned long gm_delay = 40; //delay específicamente para el juego y el mensaje
 
 // MATRIZ NODRIVER
 int filas_no_driver[] = {50, 49, 48, 47, 46, 45, 44, 43};
@@ -169,7 +170,6 @@ typedef enum{
 }movement; // dirección del desplazamiento, hacia la izquierda o derecha
 
 uint8_t global_lives = 3; // Por defecto el juego comienza con 3 vidas
-long int global_delay = 1000; // delay global
 
 typedef struct{
     uint8_t     lives;      // vidas
@@ -411,17 +411,17 @@ void reset_towers(){
  * Hace que el avión se mueva una unidad
  */
 void gameloop(){
+
+    draw();
+    delay(gm_delay);
+    bombloop();
     move_plane();
+    draw();
     /*
     if(towers[current_plane.middle]!=0){//modo automatico xd
         launch_bomb();
     }
     */
-    //render_tablero_de_juego();
-    draw();
-    bombloop();
-    //render_tablero_de_juego();
-    draw();
 }
 
 /* TODO: Animación de cambio de nivel
@@ -515,7 +515,6 @@ void loop() {
     Serial.println("en mensaje");
     gamePad();
     mostrarMensaje();
-
   }else if (enMenu) {
     Serial.println("en menu");
     menu();
@@ -525,7 +524,7 @@ void loop() {
   } else {
     Serial.println("en juego");
     //LimpiarMatrices antes
-    limpiarMatrices();
+
     if(iniciaJuego){
         newgame();
         iniciaJuego = false;
@@ -533,10 +532,9 @@ void loop() {
     gameloop();
     //Juego();
     gamepad_action(gamePad());
-    delay(1);
   }
+  delay(delaytime);
 
-   delay(delaytime);
 }
 
 
@@ -557,7 +555,7 @@ void menu() {
     pintar();
     pintar();
     pintar();
-    delay(10);
+    delay(delaytime);
     contMenu=1;
   }else{
     mostrarMensaje2();
@@ -768,10 +766,10 @@ void mostrarMensaje() {
       
     }
   
-    delay(delaytime/100);
   }
+    //delay(gm_delay);
 
-  if (currentMillis - prev_MillisM > delaytime) {
+  if (currentMillis - prev_MillisM > gm_delay) {
     prev_MillisM = currentMillis;
     //cadena de derecha a izquierda = true
     if (movimiento_inv == true) {
@@ -813,7 +811,7 @@ void mostrarMensaje2() {
       
     }
 
-    delay(delaytime/100);
+    //delay(delaytime);
   }
 
   
@@ -882,7 +880,8 @@ void configuracion() {
   unsigned long currentMillis = millis();
   int potenciometro_velocidad = map(analogRead(A0), 0, 1000, 40, 0);
   int mostrar_velocidad = 10 - (potenciometro_velocidad*10)/40; //porcentaje de la velocidad por regla de 3
-  delaytime = potenciometro_velocidad;
+  //delaytime = potenciometro_velocidad;
+  gm_delay = potenciometro_velocidad;
   int potenciometro_vidas = map(analogRead(A8), 0, 1000, 3, 10);
   global_lives = potenciometro_vidas;
   for (int i = 0; i < 8; i++) {
@@ -897,6 +896,7 @@ void configuracion() {
     }
   }
   Serial.println(mostrar_velocidad);
-  Serial.println(delaytime);
+  //Serial.println(delaytime);
+  Serial.println(gm_delay);
   draw();
 }
