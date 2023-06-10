@@ -420,7 +420,7 @@ void check_collision(){
  * Revisa si hay que pasar al siguiente nivel
  */
 void check_score(){
-    if(current_plane.curr_score == current_plane.level ){
+    if(current_plane.curr_score == current_plane.level + 2){
         next_level();
     }
 }
@@ -430,7 +430,7 @@ void check_score(){
  */
 void generate_towers(uint8_t nivel){
     uint8_t counter =0;
-    while(counter<nivel){
+    while(counter<nivel + 2){
         uint8_t randomY = (rand() % 4 ) + 1 ;
         uint8_t randomX = rand() % COL_NUM;
         if(towers[randomX]== 0 ){
@@ -487,7 +487,6 @@ void gameloop(){
  * Inicia un nuevo nivel
  */
 void next_level(){
-    mostrarNumero(current_plane.level,2);
     limpiarTableroDeJuego();
     reset_towers();
 
@@ -499,7 +498,8 @@ void next_level(){
     current_plane.bottom = 1;
     current_plane.curr_score = 0;
     current_plane.bomb = false;
-    current_plane.level = (current_plane.level + 1 > 16) ? 16 : current_plane.level+1;
+    current_plane.level = (current_plane.level + 1 > 14) ? 14 : current_plane.level+1;
+    mostrarNumero(current_plane.level,2);
 
     tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
