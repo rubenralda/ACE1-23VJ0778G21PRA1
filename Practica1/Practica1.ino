@@ -111,7 +111,8 @@ int numeroContador[][8] = {{0, 0, 0, 0, 0, 0, 0, 0},
 
 int valor_potenciometro = 0;
 // INICIALIZACION DEL JUEGO
-bool iniciaJuego = false;
+bool iniciaJuego = false; // Iniciar juego nuevo
+bool enJuego = false; // Jugando 
 
 // VARIABLE PARA ESTAR EN MENSAJE
 bool enMensaje =true;
@@ -214,6 +215,7 @@ void bombloop();
 void check_score();
 void gamepad_action(char);
 
+void mostrarNumero(int num, int seconds, bool mostrar_tick = false);
 
 /*
  * Ejecuta el lanzamiento de una bomba
@@ -306,6 +308,7 @@ void gamepad_action(char button){
         current_plane.direction = MOV_RIGHT;
     }else if(button == 'k'){
         enPausa = true;
+        enJuego = false;
         enMensaje=false;
         enMenu=false;
         iniciaJuego=false;
@@ -355,6 +358,7 @@ void check_collision(){
             if(current_plane.lives == 0){
                 //GAMEOVER;
                 enPausa = false;
+                enJuego = false;
                 enMensaje=true;
                 enMenu=false;
                 iniciaJuego=false;
@@ -436,7 +440,7 @@ void gameloop(){
  * Inicia un nuevo nivel
  */
 void next_level(){
-
+    mostrarNumero(current_plane.level,2);
     limpiarTableroDeJuego();
     reset_towers();
 
@@ -530,16 +534,20 @@ void loop() {
   } else if(enConfiguracion) {
     Serial.println("en config");
     configuracion();
-  } else {
+  } else if(enPausa){
+    Serial.println("en pausa");
+    mostrarNumero(current_plane.lives,1,true);
+    gamePad();
+    return;
+  } else if(iniciaJuego){
+    Serial.println("nuevo juego");
+    newgame();
+    iniciaJuego = false;
+    enJuego = true;
+  } else if (enJuego){
     Serial.println("en juego");
-    //LimpiarMatrices antes
     limpiarMatrices();
-    if(iniciaJuego){
-        newgame();
-        iniciaJuego = false;
-    }
     gameloop();
-    //Juego();
     gamepad_action(gamePad());
     delay(1);
   }
@@ -615,13 +623,13 @@ char gamePad() {
         //derecha =false;
       }
       delay(50);
-    }
-    
+    }  
     return 's';
   }else if(digitalRead(BTN_K)==HIGH){
       pressTime++;
-      delay(500); // works like a timer with one second steps
-      if (pressTime >= 3)
+      delay(50); // works like a timer with one second steps
+      Serial.println(pressTime);
+      if (pressTime >= 30)
       {
         if(enMensaje == true && enMenu==false && iniciaJuego==false && enConfiguracion == false){
           
@@ -652,20 +660,31 @@ char gamePad() {
           pressTime=0;
         
         }
+        if(enPausa){
+            Serial.println("3seg REGRESAR AL MENÚ");
+            // Si k se presiona durante 3 segundos mientras el juego está pausado, se regresa al menú principal
+            enPausa = false;
+            enJuego = false;
+            enMensaje=false;
+            enMenu=true;
+            iniciaJuego=false;
+            enConfiguracion=false;
+            pressTime = 0;
 
-      }else if(pressTime <= 2){
-        //imprimir vidas
-        if(enMensaje == false && enMenu==false && iniciaJuego==true && enConfiguracion == false){
-          
-          Serial.println("LAS VIDAS SON :");
-          
-          
         }
-        
-      }
+      }/*  else if( enPausa && pressTime > 19 && pressTime < 30) {
+            // Si k se presiona por 2 segundos, mientras se está en pausa, el juego se reanuda
+             
+           Serial.println("2 seg REANUNDANDO JUEGO");
+           enPausa = false;
+           enJuego = true;
+           return ' '; 
+          
+        }   */   
        
     return 'k';
   }
+  pressTime = 0;
   return ' ';
 }
 
@@ -1004,7 +1023,7 @@ int digitos[10][8][8] = {
   
 };
 
-void mostrarNumero(int num, int seconds){
+void mostrarNumero(int num, int seconds, bool mostrar_tick = false){
   int unidades = num % 10;
   int decenas = (num - unidades) / 10;
 
@@ -1038,7 +1057,11 @@ void mostrarNumero(int num, int seconds){
     }
   }
   // actualizacion de las matrices
-  for (int i = 0; i < seconds*40; i++) {
-    actualizarMatrices(matriz_izquierda, matriz_derecha);
+  if (mostrar_tick){ // cuando sólo se requiere renderizar por loop, en lugar de n segundos
+      actualizarMatrices(matriz_izquierda, matriz_derecha);
+ }else{
+    for (int i = 0; i < seconds*40; i++) {
+      actualizarMatrices(matriz_izquierda, matriz_derecha);
+    }
   }
 }
