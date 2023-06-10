@@ -78,7 +78,7 @@ void actualizarBufferStats(){
 //*************MENSAJE ----- MENU****************
 int contMenu=0;
 
-unsigned long delaytime = 40;
+unsigned long delaytime = 30;
 
 // MATRIZ NODRIVER
 int filas_no_driver[] = {50, 49, 48, 47, 46, 45, 44, 43};
@@ -101,7 +101,7 @@ int numeroContador[][8] = {{0, 0, 0, 0, 0, 0, 0, 0},
 
 
 
-int valor_potenciometro = 0;
+//int valor_potenciometro = 0;
 // INICIALIZACION DEL JUEGO
 bool iniciaJuego = false;
 
@@ -169,7 +169,7 @@ typedef enum{
 }movement; // dirección del desplazamiento, hacia la izquierda o derecha
 
 uint8_t global_lives = 3; // Por defecto el juego comienza con 3 vidas
-long int global_delay = 1000; // delay global
+//long int global_delay = 1000; // delay global sin usar parece
 
 typedef struct{
     uint8_t     lives;      // vidas
@@ -533,10 +533,10 @@ void loop() {
     gameloop();
     //Juego();
     gamepad_action(gamePad());
-    delay(1);
+    delay(delaytime);
   }
 
-   delay(delaytime);
+   
 }
 
 
@@ -555,9 +555,9 @@ void menu() {
       }
     }
     pintar();
-    pintar();
-    pintar();
-    delay(10);
+    //pintar();
+    //pintar();
+    //delay(10);
     contMenu=1;
   }else{
     mostrarMensaje2();
@@ -723,9 +723,9 @@ void limpiarMatrices() {
   // limpiaremos los displays de las matrices.
   matrix_driver.clearDisplay(0);
   for (int i = 0; i < (COL_NUM / 2); i++) {
-    digitalWrite(columnas_no_driver[i], HIGH);
+    digitalWrite(columnas_no_driver[i], LOW);
     for (int j = 0; j < ROW_NUM; j++) {
-      digitalWrite(filas_no_driver[j], LOW);
+      digitalWrite(filas_no_driver[j], HIGH);
     }
   }
 }
@@ -739,7 +739,7 @@ void pintar() {
         digitalWrite(columnas_no_driver[j], HIGH);
       }
     }
-    delay(1);
+    //delay(1);
     digitalWrite(filas_no_driver[i], HIGH);
     for (int j = 0; j < 8; j++) {
       digitalWrite(columnas_no_driver[j], LOW);
@@ -768,7 +768,7 @@ void mostrarMensaje() {
       
     }
   
-    delay(delaytime/100);
+    //delay(delaytime/100);
   }
 
   if (currentMillis - prev_MillisM > delaytime) {
@@ -794,34 +794,18 @@ void mostrarMensaje() {
 
 void mostrarMensaje2() {
   unsigned long currentMillis = millis();
- 
   for (int i = 0; i < 8; i++) {
-   
     for (int j = 0; j < 16; j++) {
-
-     
-
-
       if(cadena2[i][j ]==0 ){
-     
         tablero_de_juego[i][j]=0;
-        
       }else{
-       
         tablero_de_juego[i][j]=1;
-      }
-      
+      } 
     }
-
-    delay(delaytime/100);
+    //delay(delaytime/100);
   }
-
-  
-
-  
-
- draw();
-limpiarTableroDeJuego();
+  draw();
+  limpiarTableroDeJuego();
 }
 
 void mostrarStats() { 
@@ -877,11 +861,10 @@ void clearMatrizNoDriver() {
 
 //configuracion del juego y el mensaje
 void configuracion() {
-  delay(1);
   gamePad();
   unsigned long currentMillis = millis();
-  int potenciometro_velocidad = map(analogRead(A0), 0, 1000, 40, 0);
-  int mostrar_velocidad = 10 - (potenciometro_velocidad*10)/40; //porcentaje de la velocidad por regla de 3
+  int potenciometro_velocidad = map(analogRead(A0), 0, 1000, 30, 0);
+  int mostrar_velocidad = 10 - (potenciometro_velocidad*10)/30; //porcentaje de la velocidad por regla de 3
   delaytime = potenciometro_velocidad;
   int potenciometro_vidas = map(analogRead(A8), 0, 1000, 3, 10);
   global_lives = potenciometro_vidas;
