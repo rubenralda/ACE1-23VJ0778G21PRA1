@@ -15,6 +15,16 @@
 #define BTN_K 3
 LedControl matrix_driver = LedControl(51, 53, 52, 1);
 
+// BUFFER PARA AMBAS MATRICES
+int buffer[8][16];
+
+void limpiarBuffer(){
+  for (int row = 0; row < 8; row++) {
+    for (int col = 0; col < 16; col++) {
+      buffer[row][col] = 0;
+    }
+  }
+}
 
 // ------------------------------------------------------
 // -------------------- ESTADÍSTICAS --------------------
@@ -97,8 +107,6 @@ int numeroContador[][8] = {{0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0}
 };
-
-
 
 
 int valor_potenciometro = 0;
@@ -899,4 +907,67 @@ void configuracion() {
   Serial.println(mostrar_velocidad);
   Serial.println(delaytime);
   draw();
+}
+
+// ------------- CONTADOR -----------------
+
+int digitos[2][8][8] = {
+  { {0,0,1,1,1,0,0,0}, // Cero
+    {0,1,0,0,0,1,0,0},
+    {0,1,0,0,0,1,0,0},
+    {0,1,0,0,0,1,0,0},
+    {0,1,0,0,0,1,0,0},
+    {0,1,0,0,0,1,0,0},
+    {0,1,0,0,0,1,0,0},
+    {0,0,1,1,1,0,0,0}
+  }
+  ,
+  { {0,0,0,1,0,0,0,0}, // Uno
+    {0,0,1,1,0,0,0,0},
+    {0,0,0,1,0,0,0,0},
+    {0,0,0,1,0,0,0,0},
+    {0,0,0,1,0,0,0,0},
+    {0,0,0,1,0,0,0,0},
+    {0,0,0,1,0,0,0,0},
+    {0,0,1,1,1,0,0,0}
+  }
+};
+
+void mostrarNumero(int num, int seconds){
+  int unidades = num % 10;
+  int decenas = (num - unidades) / 10;
+
+  // Settear Buffer 
+  for(int i = 0; i < 16; i++){
+    for(int j = 0; j < 8; j++){
+      if(i < 8){
+        buffer[j][i] = digitos[decenas][j][i];
+      }
+      else {
+        buffer[j][i] = digitos[unidades][j][i];
+      }      
+    }
+  }
+  // Imprimir Buffer
+  // matriz con driver
+   int matriz_izquierda[ROW_NUM][COL_NUM/2] = {};
+   // matriz sin driver
+   int matriz_derecha[ROW_NUM][COL_NUM/2] = {};
+  
+  // este loop hace que se pueda escribir dentro de la matriz de led
+  for (int i = 0; i < ROW_NUM; i++) {
+    for (int j = 0; j < COL_NUM; j++) {
+      //si la columna es menor que 8, esta pintara en la matriz con driver (izquierda)
+      //de lo contrario pintara en la matriz sin driver (derecha)
+      if (j < COL_NUM/2) {
+        matriz_izquierda[i][j] = buffer[i][j];
+      } else {
+        matriz_derecha[i][j-8] = buffer[i][j];
+      }
+    }
+  }
+  // actualizacion de las matrices
+  for (int i = 0; i < seconds*40; i++) {
+    actualizarMatrices(matriz_izquierda, matriz_derecha);
+  }
 }
