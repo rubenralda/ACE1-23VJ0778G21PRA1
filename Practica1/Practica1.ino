@@ -535,6 +535,7 @@ void newgame(){
     tablero_de_juego[current_plane.bottom-1][(current_plane.direction == MOV_LEFT) ? current_plane.rear : current_plane.front] = 1 ;
     generate_towers(1);
     add_towers();
+    mostrarNumero(current_plane.level,2);
     gameloop();
 }
 
