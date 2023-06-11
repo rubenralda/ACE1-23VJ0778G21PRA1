@@ -228,3 +228,177 @@ void reset_plane(){
 }
 ```
 
+#### Verificar colisiones
+
+Este método se encarga de verificar si el avión colisiona con una torre. En caso de que el avión choque, disminuye la vidas del jugador en 1 y llama reset_plane() para regresar el avión arriba, en caso de que las vidas lleguen a 0 regresa al programa al mensaje inicial.
+
+``` cpp
+void check_collision(){
+    if(towers[current_plane.rear]!=0 ||
+            towers[current_plane.middle]!=0 ||
+            towers[current_plane.front]!=0)
+    {
+        if(8-towers[current_plane.rear]<=current_plane.bottom ||
+            8-towers[current_plane.middle]<=current_plane.bottom ||
+            8-towers[current_plane.front]<=current_plane.bottom)
+        {
+            if(current_plane.lives == 0){
+                //GAMEOVER;
+                enPausa = false;
+                enJuego = false;
+                enMensaje=true;
+                enMenu=false;
+                iniciaJuego=false;
+                enConfiguracion=false;
+            }
+                current_plane.lives--;
+                reset_plane();
+                add_towers();
+                //render_tablero_de_juego();
+                draw();
+        }
+    }
+}
+```
+
+### Torres
+
+#### Generación de torres
+
+Este método se encarga de generar las torres en el juego, este toma como parámetro el nivel actual de juego, genera 1 torre extra por nivel. La cuenta de las torres en el nivel 1 es de 3, y se suma sobre este número.
+Se generan la posición en x y la altura de la torre aleatoriamente, verifica que no exista ya una torre en la coordenada x para así agregarla al arreglo donde se guardan todas la torres, se repite el procese hasta que se generen todas las torres para el nivel.
+
+``` cpp
+void generate_towers(uint8_t nivel){
+    uint8_t counter =0;
+    while(counter<nivel + 2){
+        uint8_t randomY = (rand() % 4 ) + 1 ;
+        uint8_t randomX = rand() % COL_NUM;
+        if(towers[randomX]== 0 ){
+            towers[randomX] = randomY;
+            counter++;
+        }
+    }
+    limpiarTableroDeJuego();
+    add_towers();
+}
+```
+
+#### Añadir torres al juego
+
+Este método simplemente agrega las torres al tablero de juego, agrega cada torre partiendo de su punto más alto hasta la altura 0.
+
+``` cpp
+void add_towers(){
+    for(int i = 0 ; i<COL_NUM ; i++){
+        for(int y=0; y < towers[i] ;y++ ){
+            tablero_de_juego[7-(y)][i] = 1;
+        }
+    }
+}
+```
+
+#### Reiniciar torres
+
+Este metodo asigna el valor de altura 0 a todas las torres, funcionalmente haciendo que no existan torres.
+
+``` cpp
+void reset_towers(){
+    for(int i = 0 ; i<COL_NUM ; i++){
+        towers[i] = 0;
+    }
+}
+```
+
+### Controles del juego
+
+#### Control del juego con el gamepad
+
+Este metodo toma como parametro una variable de tipo caracter, retornada por la función gamepad().
+* Cambia la dirección del avión con los botones l y r
+* Ejecuta el lanzamiento del proyectil con el boton s
+* En caso de presionar el botón k:
+    - Si se está jugando, nos lleva al menú de pausa
+    - Si se está en el menú de pausa:
+        - Si se deja el botón presionado por 2 segundos (2.00 - 2.99), regresa al juego.
+        - Si se deja el botón presionar por 3 segundos o más, regresa al menú principal.
+``` cpp
+void gamepad_action(char button){
+    if(button == 'l'){
+        current_plane.direction = MOV_LEFT;
+    }else if(button == 'r'){
+        current_plane.direction = MOV_RIGHT;
+    }else if(button == 'k'){
+        if(enPausa){
+            pressTime = 0;
+            bool toMenu = false;
+            bool toGame = false;
+            while(digitalRead(BTN_K)==HIGH){ 
+                pressTime++;
+                delay(100);
+                mostrarNumero(current_plane.lives,1,true);
+                if(pressTime > 29){
+                    Serial.print(pressTime);
+                    Serial.println(" REGRESAR AL MENU");
+                    toMenu = true;
+                }else if (pressTime < 30 && pressTime > 19){
+                    Serial.print(pressTime);
+                    Serial.println("REGRESAR AL JUEGO");
+                    toGame = true;
+                }else{
+                    Serial.print(pressTime);
+                    Serial.println("QUEDARSE EN PAUSA"); 
+                }
+            }
+            if(toMenu){
+                // Si k se presiona durante 3 segundos mientras el juego está pausado, se regresa al menú principal
+                enPausa = false;
+                enJuego = false;
+                enMensaje=false;
+                enMenu=true;
+                iniciaJuego=false;
+                enConfiguracion=false;
+                pressTime = 0;
+            }else if(toGame){
+                enPausa = false;
+                enJuego = true;
+                enMensaje=false;
+                enMenu=false;
+                iniciaJuego=false;
+                enConfiguracion=false;
+                pressTime = 0;
+
+            }
+        }else{
+            enPausa = true;
+            enJuego = false;
+            enMensaje=false;
+            enMenu=false;
+            iniciaJuego=false;
+            enConfiguracion=false;
+        }
+        // menú pausa
+    }else if(button == 's'){
+        launch_bomb();
+    }
+}
+```
+
+#### Lanzar proyectil
+
+Esta función se ejecuta cuando se presiona el botón de lanzamiento de proyectil, verifica que no se puedan lanza más de un proyectil a la vez.
+Asigna valores a las variables de la posición en x y y de la bomba, al igual que valida si la columna en la que se lanzó tiene una torre. 
+
+```  cpp
+void launch_bomb(){
+    if (!current_plane.bomb){
+        current_plane.bomb = true;
+        bombX = current_plane.middle;
+        bombY = current_plane.bottom;
+        if( towers[current_plane.middle] != 0 ){
+            is_tower = true;
+        }
+    }
+}
+```
+
