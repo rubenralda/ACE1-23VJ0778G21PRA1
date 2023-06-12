@@ -309,23 +309,24 @@ void gamepad_action(char button){
         current_plane.direction = MOV_RIGHT;
     }else if(button == 'k'){
         if(enPausa){
-            pressTime = 0;
+            long int pressStart = millis();
             bool toMenu = false;
             bool toGame = false;
             while(digitalRead(BTN_K)==HIGH){ 
-                pressTime++;
-                delay(100);
+                //pressTime++;
+                //delay(100);
                 mostrarNumero(current_plane.lives,1,true);
-                if(pressTime > 29){
-                    Serial.print(pressTime);
+                long int comp = millis() - pressStart;
+                if(comp> 2900){
+                    Serial.print(comp);
                     Serial.println(" REGRESAR AL MENU");
                     toMenu = true;
-                }else if (pressTime < 30 && pressTime > 19){
-                    Serial.print(pressTime);
+                }else if (comp < 3000 && comp > 1900){
+                    Serial.print(comp);
                     Serial.println("REGRESAR AL JUEGO");
                     toGame = true;
                 }else{
-                    Serial.print(pressTime);
+                    Serial.print(comp);
                     Serial.println("QUEDARSE EN PAUSA"); 
                 }
             }
