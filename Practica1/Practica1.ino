@@ -303,9 +303,9 @@ void move_plane_down(){
  * Realiza acciones de acuerdo al input dado por el gamepad 
  */
 void gamepad_action(char button){
-    if(button == 'l'){
+    if(button == 'r'){
         current_plane.direction = MOV_LEFT;
-    }else if(button == 'r'){
+    }else if(button == 'l'){
         current_plane.direction = MOV_RIGHT;
     }else if(button == 'k'){
         if(enPausa){
