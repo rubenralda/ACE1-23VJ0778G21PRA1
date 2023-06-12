@@ -399,6 +399,7 @@ void check_collision(){
             8-towers[current_plane.middle]<=current_plane.bottom ||
             8-towers[current_plane.front]<=current_plane.bottom)
         {
+            current_plane.lives--;
             if(current_plane.lives == 0){
                 //GAMEOVER;
                 agregarPunteo(current_plane.score);
@@ -410,7 +411,6 @@ void check_collision(){
                 iniciaJuego=false;
                 enConfiguracion=false;
             }
-                current_plane.lives--;
                 reset_plane();
                 add_towers();
                 //render_tablero_de_juego();
