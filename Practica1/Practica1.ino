@@ -28,7 +28,7 @@ void limpiarBuffer(){
 
 // ------------------------------------------------------
 // -------------------- ESTADÍSTICAS --------------------
-int punteos[] = {2,1,0,0,0}; // Stack de Punteos
+int punteos[] = {0,0,0,0,0}; // Stack de Punteos
 int stats[] = {0,0,0,0,0}; // Stack de Stats (0-8)
 int bufferStats[8][16];
 
@@ -59,7 +59,7 @@ void generarStats(){
 }
 
 void agregarPunteo(int nuevoPunteo){ // Añade al Stack de Punteos
-  for (int i = 4; i <= 1; i--){ // Por cada punteo
+  for (int i = 4; i > 0; i--){ // Por cada punteo
     punteos[i] = punteos[i-1];  // Se corre una posición
   }
   punteos[0] = nuevoPunteo;     // Se agrega nuevo punteo
@@ -401,6 +401,8 @@ void check_collision(){
         {
             if(current_plane.lives == 0){
                 //GAMEOVER;
+                agregarPunteo(current_plane.score);
+                current_plane.score = 0;
                 enPausa = false;
                 enJuego = false;
                 enMensaje=true;
@@ -525,6 +527,9 @@ void newgame(){
     current_plane.rear = 0;
     current_plane.bottom = 1;
     current_plane.curr_score = 0;
+    if (current_plane.score != 0){
+      agregarPunteo(current_plane.score);
+    }
     current_plane.score = 0;
     current_plane.bomb = false;
     current_plane.level = 1;
@@ -564,7 +569,7 @@ void setup() {
   pinMode(START, INPUT);
   pinMode(BTN_K, INPUT);
 
- //Inicialización de Estadísticas
+ //Inicialización de Estadísticas  
   generarStats();
   limpiarBufferStats();
   actualizarBufferStats();
@@ -636,6 +641,9 @@ void menu() {
     
   }else if(gamePad()=='s'){
     Serial.println("stats");
+    for(int i=0; i<5; i++){
+      Serial.println(punteos[i]);
+    }
     mostrarStats();
     delay(150);
 
