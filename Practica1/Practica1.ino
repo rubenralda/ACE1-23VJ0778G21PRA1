@@ -500,7 +500,7 @@ void next_level(){
     current_plane.bomb = false;
     current_plane.level = (current_plane.level + 1 > 14) ? 14 : current_plane.level+1;
     mostrarNumero(current_plane.level,2);
-
+    current_plane.plane_time = millis();
     tablero_de_juego[current_plane.bottom][current_plane.front] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.middle] = 1;
     tablero_de_juego[current_plane.bottom][current_plane.rear] = 1;
